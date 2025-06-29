@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'edit_task_screen.dart';
+
 
 // --- Classe principal que agora é um StatefulWidget ---
 class TaskListScreen extends StatefulWidget {
@@ -206,64 +208,103 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Ícone de status da tarefa (bola ou check)
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    // Simula a mudança de status. Em uma app real, isso atualizaria seus dados.
-                                    _tasks = _tasks.map((t) {
-                                      if (t['name'] == taskName && t['time'] == taskTime) { // Identificador simples para o exemplo
-                                        return {...t, 'isCompleted': !t['isCompleted']};
-                                      }
-                                      return t;
-                                    }).toList();
-                                  });
-                                  print('Tarefa "${taskName}" clicada para mudar status!');
-                                },
-                                child: Icon(
-                                  isCompleted ? Icons.check_circle : Icons.circle_outlined,
-                                  color: isCompleted ? Colors.green : Colors.grey[400],
-                                  size: 24,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _tasks = _tasks.map((t) {
+                                        if (t['name'] == taskName && t['time'] == taskTime) {
+                                          return {...t, 'isCompleted': !t['isCompleted']};
+                                        }
+                                        return t;
+                                      }).toList();
+                                    });
+                                  },
+                                  child: Icon(
+                                    isCompleted ? Icons.check_circle : Icons.circle_outlined,
+                                    color: isCompleted ? Colors.green : Colors.grey[400],
+                                    size: 24,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        taskName,
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          decoration: isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+                                          color: isCompleted ? Colors.grey[600] : Colors.black87,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        taskLocation,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[500],
+                                          decoration: isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
-                                      taskName,
+                                      taskTime,
                                       style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        decoration: isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
-                                        color: isCompleted ? Colors.grey[600] : Colors.black87,
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      taskLocation,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey[500],
-                                        decoration: isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
-                                      ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit, color: Colors.blueAccent, size: 20),
+                                          onPressed: () async {
+                                            final editedTask = await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => EditTaskScreen(task: task),
+                                              ),
+                                            );
+
+                                            if (editedTask != null) {
+                                              setState(() {
+                                                _tasks[index] = editedTask;
+                                              });
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text('Tarefa \"${editedTask['name']}\" atualizada!')),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
+                                          onPressed: () {
+                                            setState(() {
+                                              _tasks.removeAt(index);
+                                            });
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Tarefa \"$taskName\" excluída')),
+                                            );
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ),
-                              // Hora da tarefa
-                              Text(
-                                taskTime,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
+
+                              ],
+                            ),
+
                           if (participants.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             Row(
@@ -284,10 +325,16 @@ class _TaskListScreenState extends State<TaskListScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 20.0, left: 16.0, right: 16.0, top: 10.0),
               child: ElevatedButton(
-                onPressed: () {
-                  // Aqui você vai colocar a navegação para a tela de adicionar tarefa
-                  print('Botão "Add new task" clicado!');
+                onPressed: () async {
+                  final newTask = await Navigator.pushNamed(context, '/add');
+
+                  if (newTask != null && newTask is Map<String, dynamic>) {
+                  setState(() {
+                  _tasks.add(newTask);
+                    });
+                 }
                 },
+
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[700], // Cor de fundo verde escura
                   foregroundColor: Colors.white, // Cor do texto/ícone

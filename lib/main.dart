@@ -1,7 +1,6 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
-import 'screens/task_list_screen.dart';
+import 'screens/add_task_screen.dart';
+import 'screens/task_list_screen.dart'; // ou onde estiver sua tela principal
 
 void main() {
   runApp(const MyApp());
@@ -13,11 +12,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'To-Do List',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      title: 'ToDo App',
+      theme: ThemeData(primarySwatch: Colors.green),
       home: const TaskListScreen(),
+      routes: {
+        '/add': (context) => const AddTaskScreen(),
+      },
     );
   }
 }
+
