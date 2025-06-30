@@ -115,32 +115,53 @@ class _TaskListScreenState extends State<TaskListScreen> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Today',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[800], // Verde escuro para o título
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Today',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[800],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${DateTime.now().day} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][DateTime.now().month - 1]} ${DateTime.now().year}, ${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][DateTime.now().weekday - 1]}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${DateTime.now().day} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][DateTime.now().month - 1]} ${DateTime.now().year}, ${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][DateTime.now().weekday - 1]}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today, color: Colors.green[600]),
+                            const SizedBox(width: 12),
+                            IconButton(
+                              icon: const Icon(Icons.person, color: Colors.green),
+                              tooltip: 'Usuários',
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/users');
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.category, color: Colors.green),
+                              tooltip: 'Categorias',
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/categories');
+                              },
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                  Icon(Icons.calendar_today, color: Colors.green[600]), // Ícone de calendário verde
-                ],
-              ),
+
+                      ],
+                    ),
+
             ),
             // --- Campo de Busca ---
             Padding(
