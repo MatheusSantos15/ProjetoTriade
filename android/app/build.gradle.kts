@@ -19,17 +19,14 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
-    defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.projetotriade"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-         versionCode = flutter.versionCode() // Adicione ()
-        versionName = flutter.versionName() // Adicione ()
-    }
-
+defaultConfig {
+    applicationId = "com.example.projetotriade"
+    minSdk = flutter.minSdkVersion
+    targetSdk = flutter.targetSdkVersion
+    // LINHAS CORRIGIDAS ABAIXO
+    versionCode = flutter.versionCode
+    versionName = flutter.versionName
+}
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
