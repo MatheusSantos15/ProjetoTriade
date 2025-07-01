@@ -1,0 +1,60 @@
+# Nome do nosso fluxo de trabalho. Aparecerá na aba "Actions" do GitHub.
+name: Build Flutter Android
+
+# Define quando este workflow deve ser executado.
+on:
+  # Executa quando houver um 'push' (envio de código) para a branch 'main'.
+  push:
+    branches: [ "main" ]
+  # Também permite que você execute este workflow manualmente na aba Actions.
+  workflow_dispatch:
+
+# Define os "trabalhos" (jobs) que o workflow irá executar.
+jobs:
+  # Nosso job se chama 'build'. Ele será executado em uma máquina virtual.
+  build:
+    # O tipo de máquina a ser usada. Para builds Android, usamos a mais recente do Ubuntu.
+    runs-on: ubuntu-latest
+
+    # Os 'passos' (steps) que o job irá executar em sequência.
+    steps:
+      # 1. Baixa o código do seu repositório para a máquina virtual.
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      # 2. Configura o ambiente Java (JDK), que é necessário para compilar apps Android.
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu' # Uma distribuição popular do Java.
+          java-version: '17'   # A versão do Java que o Flutter/Android usa.
+
+      # 3. Configura o ambiente Flutter na máquina.
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0' # Use a mesma versão do Flutter que você tem na sua máquina!
+          channel: 'stable'       # Canal de versão do Flutter.
+          cache: true             # Habilita cache para acelerar futuros builds.
+
+      # 4. Instala as dependências do seu projeto Flutter (pacotes do pubspec.yaml).
+      - name: Instalar dependências
+        run: flutter pub get
+
+      # 5. (Opcional, mas recomendado) Executa os testes do seu projeto.
+      # Se um teste falhar, o build para aqui, garantindo a qualidade.
+      - name: Executar testes
+        run: flutter test
+
+      # 6. Inicia o processo de compilação do APK.
+      - name: Build do APK
+        run: flutter build apk --release
+
+      # 7. "Empacota" o APK gerado para que ele possa ser baixado.
+      - name: Upload do APK
+        uses: actions/upload-artifact@v3
+        with:
+          # O nome que o artefato terá no GitHub.
+          name: app-release.apk
+          # O caminho onde o APK foi gerado pelo comando 'flutter build'.
+          path: build/app/outputs/flutter-apk/app-release.apk
