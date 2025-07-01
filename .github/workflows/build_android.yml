@@ -52,7 +52,7 @@ jobs:
 
       # 7. "Empacota" o APK gerado para que ele possa ser baixado.
       - name: Upload do APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           # O nome que o artefato terá no GitHub.
           name: app-release.apk
