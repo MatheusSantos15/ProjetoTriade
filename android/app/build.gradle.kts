@@ -23,9 +23,9 @@ defaultConfig {
     applicationId = "com.example.projetotriade"
     minSdk = flutter.minSdkVersion
     targetSdk = flutter.targetSdkVersion
-    // LINHAS CORRIGIDAS ABAIXO
-    versionCode = flutter.versionCode
-    versionName = flutter.versionName
+    // ADICIONE OS PARÊNTESES DE VOLTA
+    versionCode = flutter.versionCode()
+    versionName = flutter.versionName()
 }
     buildTypes {
         release {
