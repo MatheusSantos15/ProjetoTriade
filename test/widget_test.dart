@@ -10,9 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:projetotriade/main.dart';
 
-//void main() {
+void main() {
   //testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+     //Build our app and trigger a frame.
     //await tester.pumpWidget(const MyApp());
 
     // Verify that our counter starts at 0.
@@ -26,5 +26,5 @@ import 'package:projetotriade/main.dart';
     // Verify that our counter has incremented.
     //expect(find.text('0'), findsNothing);
     //expect(find.text('1'), findsOneWidget);
- /// });
-//}
+ //});
+}
