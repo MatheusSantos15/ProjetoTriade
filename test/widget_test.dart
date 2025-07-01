@@ -11,6 +11,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:projetotriade/main.dart';
 
 void main() {
+  test('Placeholder test to ensure tests are found', () {
+    // A expectativa é que "true" seja "true", o que é sempre verdade.
+    expect(true, isTrue);
+  });
   //testWidgets('Counter increments smoke test', (WidgetTester tester) async {
      //Build our app and trigger a frame.
     //await tester.pumpWidget(const MyApp());
