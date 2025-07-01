@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import '../models/task.dart';
 
 class TaskService {
-  final String _baseUrl = 'https://triade-task-service.onrender.com/tasks';
+  final String _baseUrl = 'https://triade-task-service-v2.onrender.com/tasks';
 
   Future<List<Task>> getTasks() async {
     final response = await http.get(Uri.parse(_baseUrl));
