@@ -1,8 +1,11 @@
+// lib/screens/task_list_screen.dart
+
 import 'package:flutter/material.dart';
+import '../models/task.dart';
+import '../services/task_service.dart';
 import 'edit_task_screen.dart';
+import 'add_task_screen.dart';
 
-
-// --- Classe principal que agora é um StatefulWidget ---
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({Key? key}) : super(key: key);
 
@@ -10,401 +13,303 @@ class TaskListScreen extends StatefulWidget {
   State<TaskListScreen> createState() => _TaskListScreenState();
 }
 
-// --- Estado da tela de lista de tarefas ---
 class _TaskListScreenState extends State<TaskListScreen> {
-  // Lista de exemplo de tarefas com mais detalhes
-  // Em uma aplicação real, você buscaria isso de um modelo/API
-  List<Map<String, dynamic>> _tasks = [
-    {
-      'name': 'Project daily stand-up',
-      'time': '9:00 am',
-      'location': 'At the conference center',
-      'isCompleted': false,
-      'participants': [
-        'assets/images/avatar.png', // Verde Claro
-        'assets/images/avatar.png', // Verde Oliva
-      ],
-      'category': 'Meetings',
-    },
-    {
-      'name': 'Internia new UI style',
-      'time': '11:00 am',
-      'location': 'Remember to bring presents', // Adaptando para uma descrição
-      'isCompleted': false,
-      'participants': [
-        'assets/images/avatar.png', // Verde Mar
-        'assets/images/avatar.png', // Verde Mar Claro
-      ],
-      'category': 'Design',
-    },
-    {
-      'name': 'Weekly Review',
-      'time': '3:00 pm',
-      'location': 'Wanda Square ES',
-      'isCompleted': true, // Exemplo de tarefa concluída
-      'participants': [
-        'assets/images/avatar.png', // Verde Médio
-        'assets/images/avatar.png', // Verde Limão
-      ],
-      'category': 'Meetings',
-    },
-    {
-      'name': 'Interview',
-      'time': '4:00 pm',
-      'location': 'Remember to bring laptop',
-      'isCompleted': false,
-      'participants': [
-        'assets/images/avatar.png', // Verde Menta
-        'assets/images/avatar.png', // Verde Oliva
-      ],
-      'category': 'Interviews',
-    },
-  ];
+  final TaskService _taskService = TaskService();
+  late Future<List<Task>> _tasksFuture;
+  List<Task> _allTasks = [];
+  List<Task> _filteredTasks = [];
+  String _selectedFilter = 'Undone';
 
-  String _selectedFilter = 'Undone'; // Filtro selecionado inicialmente
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
 
-  // Função para construir os avatares sobrepostos
-  Widget _buildParticipantsAvatars(List<String> participantUrls) {
-    List<Widget> avatars = [];
-    for (int i = 0; i < participantUrls.length; i++) {
-      // Use NetworkImage para URLs reais ou AssetImage para assets locais
-      avatars.add(
-        Padding(
-          padding: EdgeInsets.only(left: i * 15.0), // Ajusta o deslocamento para sobrepor
-          child: CircleAvatar(
-            radius: 12,
-            backgroundColor: Colors.white, // Borda branca
-            child: CircleAvatar(
-              radius: 11,
-              // Usando um placeholder com a cor de fundo desejada
-              backgroundImage: AssetImage(participantUrls[i]),
-              onBackgroundImageError: (exception, stackTrace) {
-                // Em caso de erro ao carregar a imagem, pode mostrar um ícone de pessoa
-                print('Erro ao carregar avatar: $exception');
-              },
-            ),
-          ),
-        ),
+  void _loadTasks() {
+    setState(() {
+      _tasksFuture = _taskService.getTasks();
+    });
+  }
+
+  void _filterTasks() {
+    if (_selectedFilter == 'Undone') {
+      _filteredTasks = _allTasks.where((task) => !task.isCompleted).toList();
+    } else if (_selectedFilter == 'All') {
+      _filteredTasks = _allTasks;
+    } else {
+      _filteredTasks =
+          _allTasks.where((task) => task.category == _selectedFilter).toList();
+    }
+  }
+
+  void _deleteTask(int id) async {
+    try {
+      await _taskService.deleteTask(id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tarefa excluída com sucesso!')),
+      );
+      _loadTasks();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha ao excluir tarefa: $e')),
       );
     }
-    return SizedBox(
-      width: (participantUrls.length * 25.0).clamp(0, 70).toDouble(), // Limita a largura para poucos avatares
-      child: Stack(children: avatars.reversed.toList()), // Inverte para o primeiro avatar ficar na frente
-    );
+  }
+
+  void _toggleComplete(Task task) async {
+    try {
+      task.isCompleted = !task.isCompleted;
+      await _taskService.updateTask(task.id!, task);
+      // For a faster UI response, we can update the state locally
+      // before waiting for the full reload.
+      setState(() {
+        _filterTasks();
+      });
+    } catch (e) {
+      setState(() {
+        task.isCompleted = !task.isCompleted; // Revert on error
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha ao atualizar status da tarefa: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Filtra as tarefas com base no filtro selecionado
-    List<Map<String, dynamic>> filteredTasks = _tasks.where((task) {
-      if (_selectedFilter == 'Undone') {
-        return !task['isCompleted'];
-      } else if (_selectedFilter == 'All') {
-        return true;
-      } else {
-        return task['category'] == _selectedFilter;
-      }
-    }).toList();
-
     return Scaffold(
-      // Removendo o AppBar padrão para criar um cabeçalho personalizado
-      body: SafeArea( // Garante que o conteúdo não se sobreponha à barra de status
+      body: SafeArea(
         child: Column(
           children: [
-            // --- Seção do cabeçalho "Today" ---
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Today',
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green[800],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${DateTime.now().day} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][DateTime.now().month - 1]} ${DateTime.now().year}, ${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][DateTime.now().weekday - 1]}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_today, color: Colors.green[600]),
-                            const SizedBox(width: 12),
-                            IconButton(
-                              icon: const Icon(Icons.person, color: Colors.green),
-                              tooltip: 'Usuários',
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/users');
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.category, color: Colors.green),
-                              tooltip: 'Categorias',
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/categories');
-                              },
-                            ),
-                          ],
-                        ),
-
-                      ],
-                    ),
-
-            ),
-            // --- Campo de Busca ---
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.green[50], // Fundo levemente verde para a busca
-                  borderRadius: BorderRadius.circular(25.0),
-                  border: Border.all(color: Colors.green.shade100), // Borda sutil
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search',
-                    hintStyle: TextStyle(color: Colors.green[400]),
-                    prefixIcon: Icon(Icons.search, color: Colors.green[600]),
-                    border: InputBorder.none, // Remove a borda padrão do TextField
-                    contentPadding: const EdgeInsets.symmetric(vertical: 14.0),
-                  ),
-                ),
-              ),
-            ),
-            // --- Filtros/Categorias ---
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildFilterChip('Undone', Colors.green),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('Meetings', Colors.green),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('Consummation', Colors.green),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('Design', Colors.green), // Exemplo de outra categoria
-                    const SizedBox(width: 8),
-                    _buildFilterChip('All', Colors.green), // Um filtro para mostrar todas as tarefas
-                  ],
-                ),
-              ),
-            ),
-            // --- Lista de Tarefas (ocupa o restante do espaço) ---
+            _buildHeader(),
+            _buildSearchBar(),
+            _buildFilterChips(),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-                itemCount: filteredTasks.length,
-                itemBuilder: (context, index) {
-                  final task = filteredTasks[index];
-                  final String taskName = task['name'];
-                  final String taskTime = task['time'];
-                  final String taskLocation = task['location'];
-                  final bool isCompleted = task['isCompleted'];
-                  final List<String> participants = List<String>.from(task['participants']);
-
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    elevation: 4, // Uma sombra mais pronunciada
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15), // Bordas mais arredondadas
-                    ),
-                    color: Colors.white, // Fundo branco para os cards
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _tasks = _tasks.map((t) {
-                                        if (t['name'] == taskName && t['time'] == taskTime) {
-                                          return {...t, 'isCompleted': !t['isCompleted']};
-                                        }
-                                        return t;
-                                      }).toList();
-                                    });
-                                  },
-                                  child: Icon(
-                                    isCompleted ? Icons.check_circle : Icons.circle_outlined,
-                                    color: isCompleted ? Colors.green : Colors.grey[400],
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        taskName,
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          decoration: isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
-                                          color: isCompleted ? Colors.grey[600] : Colors.black87,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        taskLocation,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey[500],
-                                          decoration: isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      taskTime,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.edit, color: Colors.blueAccent, size: 20),
-                                          onPressed: () async {
-                                            final editedTask = await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => EditTaskScreen(task: task),
-                                              ),
-                                            );
-
-                                            if (editedTask != null) {
-                                              setState(() {
-                                                _tasks[index] = editedTask;
-                                              });
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('Tarefa \"${editedTask['name']}\" atualizada!')),
-                                              );
-                                            }
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
-                                          onPressed: () {
-                                            setState(() {
-                                              _tasks.removeAt(index);
-                                            });
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('Tarefa \"$taskName\" excluída')),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-
-                              ],
-                            ),
-
-                          if (participants.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end, // Alinha avatares à direita
-                              children: [
-                                _buildParticipantsAvatars(participants),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  );
+              child: FutureBuilder<List<Task>>(
+                future: _tasksFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text("Erro: ${snapshot.error}"));
+                  } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                    _allTasks = snapshot.data!;
+                    _filterTasks(); // Apply initial filter
+                    return _buildTaskList();
+                  } else {
+                    return const Center(child: Text("Nenhuma tarefa encontrada"));
+                  }
                 },
               ),
             ),
-            // --- Botão "Add new task" ---
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20.0, left: 16.0, right: 16.0, top: 10.0),
-              child: ElevatedButton(
-                onPressed: () async {
-                  final newTask = await Navigator.pushNamed(context, '/add');
-
-                  if (newTask != null && newTask is Map<String, dynamic>) {
-                  setState(() {
-                  _tasks.add(newTask);
-                    });
-                 }
-                },
-
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700], // Cor de fundo verde escura
-                  foregroundColor: Colors.white, // Cor do texto/ícone
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25.0), // Bordas bem arredondadas
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  minimumSize: const Size(double.infinity, 50), // Ocupa a largura total
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min, // Centraliza o conteúdo
-                  children: const [
-                    Icon(Icons.add),
-                    SizedBox(width: 8),
-                    Text(
-                      'Add new task',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            _buildAddTaskButton(),
           ],
         ),
       ),
     );
   }
 
-  // Widget auxiliar para os chips de filtro
-  Widget _buildFilterChip(String label, MaterialColor color) {
+  Widget _buildTaskList() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      itemCount: _filteredTasks.length,
+      itemBuilder: (context, index) {
+        // AQUI ESTÁ A CORREÇÃO:
+        // 'task' agora é garantidamente um objeto do tipo Task.
+        final Task task = _filteredTasks[index];
+
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () => _toggleComplete(task),
+                  child: Icon(
+                    task.isCompleted ? Icons.check_circle : Icons.circle_outlined,
+                    color: task.isCompleted ? Colors.green : Colors.grey[400],
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.name,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          decoration: task.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+                          color: task.isCompleted ? Colors.grey[600] : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        task.location,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[500],
+                          decoration: task.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(task.time, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.blueAccent, size: 20),
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                // Agora está correto: enviando um objeto Task.
+                                builder: (context) => EditTaskScreen(task: task),
+                              ),
+                            );
+                            if (result == true) {
+                              _loadTasks();
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
+                          onPressed: () => _deleteTask(task.id!),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Today', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.green[800])),
+              const SizedBox(height: 4),
+              Text(
+                '${DateTime.now().day} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][DateTime.now().month - 1]} ${DateTime.now().year}, ${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][DateTime.now().weekday - 1]}',
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                  icon: const Icon(Icons.person, color: Colors.green),
+                  tooltip: 'Usuários',
+                  onPressed: () => Navigator.pushNamed(context, '/users')),
+              IconButton(
+                  icon: const Icon(Icons.category, color: Colors.green),
+                  tooltip: 'Categorias',
+                  onPressed: () => Navigator.pushNamed(context, '/categories')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search',
+          prefixIcon: Icon(Icons.search, color: Colors.green[600]),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(25.0), borderSide: BorderSide.none),
+          filled: true,
+          fillColor: Colors.green[50],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildFilterChip('Undone'),
+            const SizedBox(width: 8),
+            _buildFilterChip('Meetings'),
+            const SizedBox(width: 8),
+            _buildFilterChip('Design'),
+            const SizedBox(width: 8),
+            _buildFilterChip('All'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label) {
     bool isSelected = _selectedFilter == label;
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
-      selectedColor: color[600], // Verde mais escuro quando selecionado
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : color[800], // Texto branco se selecionado, verde escuro caso contrário
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      backgroundColor: color[50], // Fundo verde claro para chips não selecionados
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10), // Bordas arredondadas
-        side: BorderSide(color: isSelected ? color[600]! : color[200]!), // Borda mais forte se selecionado
-      ),
       onSelected: (bool selected) {
-        setState(() {
-          _selectedFilter = label;
-        });
+        if (selected) {
+          setState(() {
+            _selectedFilter = label;
+            _filterTasks(); // Refilter the list when a chip is selected
+          });
+        }
       },
+      selectedColor: Colors.green,
+      labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
+      backgroundColor: Colors.green[50],
+    );
+  }
+
+  Widget _buildAddTaskButton() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20.0, left: 16.0, right: 16.0, top: 10.0),
+      child: ElevatedButton.icon(
+        icon: const Icon(Icons.add),
+        label: const Text('Add new task', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddTaskScreen()),
+          );
+          if (result == true) {
+            _loadTasks();
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green[700],
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
+          minimumSize: const Size(double.infinity, 50),
+        ),
+      ),
     );
   }
 }
