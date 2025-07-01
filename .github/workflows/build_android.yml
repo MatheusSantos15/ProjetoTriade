@@ -33,9 +33,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0' # Use a mesma versão do Flutter que você tem na sua máquina!
-          channel: 'stable'       # Canal de versão do Flutter.
-          cache: true             # Habilita cache para acelerar futuros builds.
+          flutter-version: '3.22.2' # <-- ALTERE PARA ESTA LINHA
+          channel: 'stable'
+          cache: true
 
       # 4. Instala as dependências do seu projeto Flutter (pacotes do pubspec.yaml).
       - name: Instalar dependências
