@@ -61,14 +61,13 @@ class _TaskListScreenState extends State<TaskListScreen> {
     try {
       task.isCompleted = !task.isCompleted;
       await _taskService.updateTask(task.id!, task);
-      // For a faster UI response, we can update the state locally
-      // before waiting for the full reload.
+
       setState(() {
         _filterTasks();
       });
     } catch (e) {
       setState(() {
-        task.isCompleted = !task.isCompleted; // Revert on error
+        task.isCompleted = !task.isCompleted; 
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Falha ao atualizar status da tarefa: $e')),
@@ -95,7 +94,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                     return Center(child: Text("Erro: ${snapshot.error}"));
                   } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                     _allTasks = snapshot.data!;
-                    _filterTasks(); // Apply initial filter
+                    _filterTasks(); 
                     return _buildTaskList();
                   } else {
                     return const Center(child: Text("Nenhuma tarefa encontrada"));
@@ -115,8 +114,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
       itemCount: _filteredTasks.length,
       itemBuilder: (context, index) {
-        // AQUI ESTÁ A CORREÇÃO:
-        // 'task' agora é garantidamente um objeto do tipo Task.
+
         final Task task = _filteredTasks[index];
 
         return Card(
@@ -175,7 +173,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                             final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                // Agora está correto: enviando um objeto Task.
+
                                 builder: (context) => EditTaskScreen(task: task),
                               ),
                             );
@@ -278,7 +276,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
         if (selected) {
           setState(() {
             _selectedFilter = label;
-            _filterTasks(); // Refilter the list when a chip is selected
+            _filterTasks(); 
           });
         }
       },

@@ -15,7 +15,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final _formKey = GlobalKey<FormState>();
   final TaskService _taskService = TaskService();
 
-  // Controladores para os campos do formulário
+ 
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
   final _timeController = TextEditingController();
@@ -42,7 +42,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         // Chama o serviço para criar a tarefa na API
         await _taskService.createTask(newTask);
 
-        // Mostra uma mensagem de sucesso
+    
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Tarefa criada com sucesso!')),
         );
@@ -51,7 +51,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         Navigator.pop(context, true);
 
       } catch (e) {
-        // Mostra uma mensagem de erro
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Falha ao criar tarefa: $e')),
         );
@@ -100,7 +100,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 decoration: const InputDecoration(labelText: 'Hora (ex: 14:00)'),
               ),
               const SizedBox(height: 24),
-              // Mostra um botão de salvar ou um indicador de carregamento
+
               _isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(

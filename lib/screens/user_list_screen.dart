@@ -67,7 +67,7 @@ class UserListScreen extends StatelessWidget {
               ),
               trailing: const Icon(Icons.info_outline),
               onTap: () {
-                // Aqui você pode abrir detalhes se quiser
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Detalhes de ${user['name']}')),
                 );

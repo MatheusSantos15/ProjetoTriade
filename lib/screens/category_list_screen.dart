@@ -52,7 +52,7 @@ class CategoryListScreen extends StatelessWidget {
               title: Text(category['name']),
               subtitle: Text(category['description']),
               onTap: () {
-                // Você pode adicionar navegação para uma tela de detalhes aqui futuramente
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Categoria "${category['name']}" selecionada')),
                 );
